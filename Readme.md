@@ -2,6 +2,8 @@
 
 This project was created for a [10-Day World Jam](https://vrch.at/jokejam), and serves as a fun starter kit for a Joke world!
 
+[Video Demo](https://youtu.be/02YPuLbVb1s)
+
 ### Visit
 The example world in VRChat here: [Demo World](https://vrchat.com/home/world/wrld_97b1a699-c924-46d8-80ee-2d9cc1f1a501).
 
