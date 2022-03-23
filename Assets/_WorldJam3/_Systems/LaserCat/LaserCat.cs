@@ -1,6 +1,7 @@
 ﻿using UdonSharp;
 using UnityEngine;
 using VRC.Examples.Helpers;
+using VRC.SDK3.Components;
 using VRC.SDKBase;
 
 namespace VRC.Examples.LaserCat
@@ -20,6 +21,7 @@ namespace VRC.Examples.LaserCat
     {
         public GameObject laser;
         public new Rigidbody rigidbody;
+        public VRCObjectSync _sync;
 
         // AI states
         public float stateRefreshInterval = 3f;
@@ -42,6 +44,8 @@ namespace VRC.Examples.LaserCat
         private float _nextAllowedRefreshStateTime;
         private float _nextAllowedLookTime;
         private float _nextAllowedJumpTime;
+        private float _respawnTime;
+        public int respawnTimeInSeconds = 90;
 
         private const float JUMP_DISTANCE_MULTIPLIER = 0.05f;
 
@@ -159,6 +163,10 @@ namespace VRC.Examples.LaserCat
                                       (Vector3.up * (distance * JUMP_DISTANCE_MULTIPLIER));
 
                     rigidbody.AddForce(JumpDir * Random.Range(jumpForceMin, jumpForceMax), ForceMode.Impulse);
+                    
+                    // Start timer to check if the cat is stuck
+                    _respawnTime = Time.time + respawnTimeInSeconds;
+                    SendCustomEventDelayedSeconds(nameof(_RespawnWhenStuck), respawnTimeInSeconds + 1); // add 1 second to avoid rounding errors in timing
                 }
 
                 _nextAllowedJumpTime = (Time.time + jumpInterval);
@@ -166,6 +174,20 @@ namespace VRC.Examples.LaserCat
 
             _lookPos = laser.transform.position;
             LookAtTarget(300, false);
+        }
+        
+        public void _RespawnWhenStuck()
+        {
+            // It may be currently jumping, or have jumped since the timer started
+            if (_currentState == State.Jump || Time.time < _respawnTime)
+            {
+                return;
+            }
+
+            if (Utilities.IsValid(_sync))
+            {
+                _sync.Respawn();
+            }
         }
 
         /// <summary>

@@ -85,7 +85,10 @@ namespace VRC.Examples.Bops
         /// </summary>
         public void _AddBop()
         {
-            Networking.SetOwner(Networking.LocalPlayer, gameObject);
+            if (!Networking.IsOwner(gameObject))
+            {
+                Networking.SetOwner(Networking.LocalPlayer, gameObject);
+            }
             TotalBops++;
             RequestSerialization();
             if (Utilities.IsValid(bopTrackerAction))

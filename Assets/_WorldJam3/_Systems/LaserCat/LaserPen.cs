@@ -1,4 +1,5 @@
 ﻿using UdonSharp;
+using VRC.SDK3.Components;
 using VRC.SDKBase;
 
 namespace VRC.Examples.LaserCat
@@ -13,9 +14,13 @@ namespace VRC.Examples.LaserCat
         public VRC_Pickup pickup;
         public LaserDot laserDot;
         public LaserCat laserCat;
+        public int respawnTimeInSeconds = 60;
+        public VRCObjectSync _sync;
 
         [UdonSynced, FieldChangeCallback(nameof(SyncedToggle))]
         private bool _syncedToggle;
+
+        private float _respawnTime;
 
         public bool SyncedToggle
         {
@@ -27,14 +32,12 @@ namespace VRC.Examples.LaserCat
             get => _syncedToggle;
         }
 
-
         /// <summary>
         /// 
         /// </summary>
         public override void OnPickupUseDown()
         {
             SyncedToggle = true;
-            RequestSerialization();
         }
 
 
@@ -44,7 +47,6 @@ namespace VRC.Examples.LaserCat
         public override void OnPickupUseUp()
         {
             SyncedToggle = false;
-            RequestSerialization();
         }
 
 
@@ -60,13 +62,31 @@ namespace VRC.Examples.LaserCat
 
 
         /// <summary>
-        /// 
+        /// Turns off Laser effect and runs timer logic to respawn pen after it hasn't been picked up for a while
         /// </summary>
         public override void OnDrop()
         {
+            VRCPlayerApi owner = Networking.GetOwner(pickup.gameObject);
+            if (owner.isLocal)
+            {
+                _respawnTime = UnityEngine.Time.time + respawnTimeInSeconds;
+                SendCustomEventDelayedSeconds(nameof(_RespawnWhenAbandoned), respawnTimeInSeconds + 1); // add 1 second to avoid rounding errors in timing
+            }
             SyncedToggle = false;
-            RequestSerialization();
+        }
 
+        public void _RespawnWhenAbandoned()
+        {
+            // It may have been picked up since it was abandoned
+            if (pickup.IsHeld || UnityEngine.Time.time < _respawnTime)
+            {
+                return;
+            }
+
+            if (Utilities.IsValid(_sync))
+            {
+                _sync.Respawn();
+            }
         }
 
     }

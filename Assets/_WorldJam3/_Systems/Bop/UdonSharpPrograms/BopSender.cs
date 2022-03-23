@@ -53,10 +53,13 @@ namespace VRC.Examples.Bops
         /// </summary>
         private void OnTriggerEnter(Collider other)
         {
+            if (Time.time < _nextAllowedBopTime)
+                return;
+
             if (_velocity.magnitude < minVelocity)
                 return;
 
-            if (Time.time < _nextAllowedBopTime)
+            if (Networking.GetOwner(this.gameObject) != Networking.LocalPlayer)
                 return;
 
             if (!Utilities.IsValid(other))
